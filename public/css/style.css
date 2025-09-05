@@ -1,8 +1,133 @@
-/* public/css/style.css */
-body { background: #f8fafc; color: #0f172a; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-.container { max-width: 1100px; }
-.card { border-radius: 10px; }
-.navbar-brand { font-weight: 700; color: #0d6efd !important; }
-.btn-primary { background:#0d6efd; border-color:#0d6efd; }
-.lead { color: #374151; }
-footer { margin-top: 40px; padding-bottom: 40px; }
+/* =====================
+   GLOBAL LAYOUT
+===================== */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  color: #1f2937;
+}
+
+/* Main content grows to push footer down */
+main {
+  flex: 1;
+  padding-top: 70px;  /* space for navbar */
+  padding-bottom: 30px; /* avoid overlap with footer */
+}
+
+/* =====================
+   NAVBAR (Sticky Top)
+===================== */
+.navbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1030; /* keeps it above content */
+}
+
+.navbar-brand {
+  color: #2563eb !important; /* blue accent */
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+}
+
+.nav-link {
+  color: #374151 !important; /* dark text */
+  margin-right: 18px;
+  transition: color 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+  color: #2563eb !important;
+}
+
+/* =====================
+   FOOTER (Always Bottom)
+===================== */
+footer {
+  background: #ffffff;
+  color: #6b7280;
+  padding: 15px;
+  text-align: center;
+  border-top: 1px solid #e5e7eb;
+  margin-top: auto; /* pushes footer to bottom */
+}
+
+/* =====================
+   CARDS
+===================== */
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.card h5 {
+  color: #1f2937;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* =====================
+   BUTTONS
+===================== */
+.btn-primary {
+  background: #2563eb;
+  border: none;
+  font-weight: 500;
+  color: #fff;
+  transition: all 0.2s ease-in-out;
+  border-radius: 8px;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+  transform: scale(1.03);
+}
+
+.btn-outline-primary {
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  border-radius: 8px;
+}
+
+.btn-outline-primary:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* =====================
+   LISTS
+===================== */
+.list-group-item {
+  background-color: #ffffff;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+/* =====================
+   BADGES
+===================== */
+.badge-skill {
+  background: #2563eb;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  margin-right: 6px;
+  display: inline-block;
+}
