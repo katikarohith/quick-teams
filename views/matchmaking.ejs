@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Matchmaking - Quick Teams</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+  </head>
+  <body>
+    <%- include('partials/header') %>
+    <main class="container py-5">
+      <h3>Recommended teammates for <%= current.name %></h3>
+      <p class="text-muted">Scored by skill match & availability.</p>
+      <% if (results && results.length) { %>
+        <div class="row">
+          <% results.forEach(r => { %>
+            <div class="col-md-6">
+              <div class="card mb-3 p-3">
+                <h5><%= r.user.name %> <small class="text-muted">(<%= r.user.email %>)</small></h5>
+                <p><strong>Skills:</strong> <%= r.user.skills && r.user.skills.length ? r.user.skills.join(', ') : 'None' %></p>
+                <p><strong>Availability:</strong> <%= r.user.availability || 'Not set' %></p>
+                <p><strong>Match score:</strong> <%= r.score %></p>
+                <a href="#" class="btn btn-outline-primary btn-sm" onclick="alert('In a full app this would send a request to team up')">Request Team Up</a>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="alert alert-info">No recommendations found yet; make your profile richer (skills & needs).</div>
+      <% } %>
+    </main>
+    <%- include('partials/footer') %>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
