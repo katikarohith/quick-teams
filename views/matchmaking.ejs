@@ -8,8 +8,17 @@
   <body>
     <%- include('partials/header') %>
     <main class="container py-5">
-      <h3>Recommended teammates for <%= current.name %></h3>
-      <p class="text-muted">Scored by skill match & availability.</p>
+
+      <h3>Search Teammates</h3>
+      <form method="get" action="/dashboard/search" class="mb-3">
+        <input type="text" class="form-control" name="skills" placeholder="Enter skills (comma separated)">
+        <button class="btn btn-primary mt-2">Search</button>
+      </form>
+
+      <% if (message) { %>
+        <div class="alert alert-warning"><%= message %></div>
+      <% } %>
+
       <% if (results && results.length) { %>
         <div class="row">
           <% results.forEach(r => { %>
@@ -19,13 +28,13 @@
                 <p><strong>Skills:</strong> <%= r.user.skills && r.user.skills.length ? r.user.skills.join(', ') : 'None' %></p>
                 <p><strong>Availability:</strong> <%= r.user.availability || 'Not set' %></p>
                 <p><strong>Match score:</strong> <%= r.score %></p>
-                <a href="#" class="btn btn-outline-primary btn-sm" onclick="alert('In a full app this would send a request to team up')">Request Team Up</a>
+                <form method="post" action="/dashboard/request/<%= r.user._id %>">
+                  <button type="submit" class="btn btn-sm btn-success">Send Team Request</button>
+                </form>
               </div>
             </div>
           <% }) %>
         </div>
-      <% } else { %>
-        <div class="alert alert-info">No recommendations found yet; make your profile richer (skills & needs).</div>
       <% } %>
     </main>
     <%- include('partials/footer') %>

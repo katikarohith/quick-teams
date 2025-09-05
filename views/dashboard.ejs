@@ -3,48 +3,80 @@
   <head>
     <title>Dashboard - Quick Teams</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
   </head>
   <body>
     <%- include('partials/header') %>
+
     <main class="container py-5">
       <div class="row">
         <div class="col-md-4">
           <div class="card p-3">
-            <h5>Your profile</h5>
-            <p><strong>Name:</strong> <%= user.name %></p>
-            <p><strong>Email:</strong> <%= user.email %></p>
-            <p><strong>Skills:</strong> <%= (user.skills && user.skills.length) ? user.skills.join(', ') : 'Not set' %></p>
-            <p><strong>Availability:</strong> <%= user.availability || 'Not set' %></p>
-            <a href="/dashboard/profile" class="btn btn-outline-primary btn-sm">Edit Profile</a>
+            <h5>Welcome, <%= user.name %></h5>
+            <p>Email: <%= user.email %></p>
+            <p><strong>Skills:</strong> <%= user.skills.join(', ') %></p>
+            <p><strong>Needs:</strong> <%= user.needs.join(', ') %></p>
+            <p><strong>Availability:</strong> <%= user.availability %></p>
+            <a href="/dashboard/profile" class="btn btn-sm btn-outline-primary">Edit Profile</a>
           </div>
+
           <div class="mt-3 card p-3">
-            <h6>Quick actions</h6>
-            <a class="btn btn-primary btn-sm mb-2" href="/dashboard/match">Find Teammates</a>
-            <a class="btn btn-secondary btn-sm mb-2" href="/dashboard/community">Events & Community</a>
+            <h5>Your Team Members</h5>
+            <% if (user.teamMembers && user.teamMembers.length) { %>
+              <ul class="list-group">
+                <% user.teamMembers.forEach(tm => { %>
+                  <li class="list-group-item"><%= tm.name %> (<%= tm.email %>)</li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <p class="text-muted">No team members yet</p>
+            <% } %>
+          </div>
+
+          <div class="mt-3 card p-3">
+            <h5>Your Joined Events</h5>
+            <% if (user.joinedEvents && user.joinedEvents.length) { %>
+              <ul class="list-group">
+                <% user.joinedEvents.forEach(ev => { %>
+                  <li class="list-group-item"><%= ev %></li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <p class="text-muted">You haven’t joined any events yet</p>
+            <% } %>
+          </div>
+
+          <div class="mt-3 card p-3">
+            <h5>Notifications</h5>
+            <% if (user.notifications && user.notifications.length) { %>
+              <ul class="list-group">
+                <% user.notifications.forEach(n => { %>
+                  <li class="list-group-item">
+                    Request from <%= n.from.name %> (<%= n.from.email %>)
+                    <% if (n.status === "pending") { %>
+                      <form method="post" action="/dashboard/accept/<%= n.from._id %>" style="display:inline;">
+                        <button class="btn btn-sm btn-success">Accept</button>
+                      </form>
+                    <% } else { %>
+                      ✅ <%= n.status %>
+                    <% } %>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <p class="text-muted">No notifications</p>
+            <% } %>
           </div>
         </div>
 
         <div class="col-md-8">
           <div class="card p-3">
-            <h4>Welcome, <%= user.name %> 👋</h4>
-            <p>Use Matchmaking to find teammates based on skills and availability. Use Community to join events.</p>
-          </div>
-          <div class="mt-3">
-            <h5>Your joined events</h5>
-            <ul class="list-group">
-              <% if (user.joinedEvents && user.joinedEvents.length) { %>
-                <% user.joinedEvents.forEach(e => { %>
-                  <li class="list-group-item"><%= e %></li>
-                <% }) %>
-              <% } else { %>
-                <li class="list-group-item text-muted">You haven't joined events yet.</li>
-              <% } %>
-            </ul>
+            <h4>Dashboard Home</h4>
+            <p>Use matchmaking and community to connect with others.</p>
           </div>
         </div>
       </div>
     </main>
+
     <%- include('partials/footer') %>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   </body>

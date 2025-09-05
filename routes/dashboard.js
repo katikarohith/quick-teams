@@ -1,92 +1,162 @@
-// routes/dashboard.js
 const express = require('express');
 const router = express.Router();
 const asyncWrap = require('../utils/asyncWrap');
 const { ensureLoggedIn } = require('../middleware/authMiddleware');
 const User = require('../models/user');
 
-// Dashboard show
+// =====================
+// Dashboard Home
+// =====================
 router.get('/', ensureLoggedIn, asyncWrap(async (req, res) => {
-  const user = await User.findById(req.session.user.id).lean();
-  if (!user) {
-    req.session.destroy(() => {});
-    return res.redirect('/auth/login');
-  }
+  const user = await User.findById(req.session.user.id)
+    .populate('teamMembers', 'name email')
+    .populate('notifications.from', 'name email')
+    .lean();
+
   res.render('dashboard', { user });
 }));
 
-// Profile edit (GET)
+// =====================
+// Profile - GET
+// =====================
 router.get('/profile', ensureLoggedIn, asyncWrap(async (req, res) => {
   const user = await User.findById(req.session.user.id).lean();
   res.render('profile', { user, errors: [] });
 }));
 
-// Profile edit (POST)
+// =====================
+// Profile - POST (update)
+// =====================
 router.post('/profile', ensureLoggedIn, asyncWrap(async (req, res) => {
   const { name, skills, needs, availability } = req.body;
   const skillsArr = (skills || '').split(',').map(s => s.trim()).filter(Boolean);
   const needsArr = (needs || '').split(',').map(s => s.trim()).filter(Boolean);
 
   await User.findByIdAndUpdate(req.session.user.id, {
-    name: name || undefined,
+    name,
     skills: skillsArr,
     needs: needsArr,
-    availability: availability || ''
+    availability
   });
 
-  // update session display name
   req.session.user.name = name;
   res.redirect('/dashboard');
 }));
 
-// Matchmaking page
-router.get('/match', ensureLoggedIn, asyncWrap(async (req, res) => {
+// =====================
+// Matchmaking search
+// =====================
+router.get('/search', ensureLoggedIn, asyncWrap(async (req, res) => {
+  const { skills } = req.query;
   const current = await User.findById(req.session.user.id).lean();
-  // simple scoring: users who have skills that match current.needs and whose needs match current.skills and availability match
+
+  if (!skills || !skills.trim()) {
+    return res.render('matchmaking', { current, results: [], message: "Enter skills to search" });
+  }
+
+  const skillList = skills.split(',').map(s => s.trim().toLowerCase());
   const others = await User.find({ _id: { $ne: current._id } }).lean();
 
   const scored = others.map(o => {
-    let score = 0;
-    // if their skills satisfy your needs
-    if (current.needs && current.needs.length) {
-      current.needs.forEach(n => {
-        if (o.skills && o.skills.includes(n)) score += 3;
+    let matchCount = 0;
+    if (o.skills && o.skills.length) {
+      skillList.forEach(s => {
+        if (o.skills.map(x => x.toLowerCase()).includes(s)) {
+          matchCount++;
+        }
       });
     }
-    // complementary: if your skills satisfy their needs
-    if (o.needs && o.needs.length) {
-      o.needs.forEach(n => {
-        if (current.skills && current.skills.includes(n)) score += 2;
-      });
-    }
-    // availability
-    if (current.availability && o.availability && current.availability === o.availability) score += 1;
-    return { user: o, score };
-  });
+    return { user: o, score: matchCount };
+  }).filter(r => r.score > 0);
 
-  scored.sort((a,b) => b.score - a.score);
-  res.render('matchmaking', { current, results: scored.slice(0,10) });
+  scored.sort((a, b) => b.score - a.score);
+
+  res.render('matchmaking', { current, results: scored, message: scored.length ? null : "No users found" });
 }));
 
-// Community events (static list + join)
-const EVENTS = [
-  { id: 'hack1', title: '24h Hackathon', date: '2025-09-10', desc: 'Campus hackathon' },
-  { id: 'study1', title: 'DSA Study Group', date: '2025-09-16', desc: 'Daily practice group' },
-  { id: 'ml1', title: 'ML Club Meetup', date: '2025-09-20', desc: 'Intro to ML' }
-];
+// =====================
+// Send Team Request
+// =====================
+router.post('/request/:id', ensureLoggedIn, asyncWrap(async (req, res) => {
+  const targetId = req.params.id;
+  const currentId = req.session.user.id;
 
+  if (targetId === currentId) return res.redirect('/dashboard/match');
+
+  const targetUser = await User.findById(targetId);
+  if (!targetUser) return res.redirect('/dashboard/match');
+
+  const already = targetUser.notifications.find(
+    n => n.from.toString() === currentId && n.status === "pending"
+  );
+  if (!already) {
+    targetUser.notifications.push({ from: currentId });
+    await targetUser.save();
+  }
+
+  res.redirect('/dashboard/match');
+}));
+
+// =====================
+// Accept Team Request
+// =====================
+router.post('/accept/:fromId', ensureLoggedIn, asyncWrap(async (req, res) => {
+  const currentId = req.session.user.id;
+  const fromId = req.params.fromId;
+
+  const user = await User.findById(currentId);
+  const fromUser = await User.findById(fromId);
+
+  if (!user || !fromUser) return res.redirect('/dashboard');
+
+  const notif = user.notifications.find(n => n.from.toString() === fromId && n.status === "pending");
+  if (notif) notif.status = "accepted";
+
+  if (!user.teamMembers.includes(fromId)) user.teamMembers.push(fromId);
+  if (!fromUser.teamMembers.includes(currentId)) fromUser.teamMembers.push(currentId);
+
+  await user.save();
+  await fromUser.save();
+
+  res.redirect('/dashboard');
+}));
+
+// =====================
+// Default Match Page
+// =====================
+router.get('/match', ensureLoggedIn, asyncWrap(async (req, res) => {
+  const current = await User.findById(req.session.user.id).lean();
+  res.render('matchmaking', { current, results: [], message: null });
+}));
+
+// =====================
+// Community Page
+// =====================
 router.get('/community', ensureLoggedIn, asyncWrap(async (req, res) => {
   const user = await User.findById(req.session.user.id).lean();
-  res.render('community', { events: EVENTS, user });
+
+  // Demo events
+  const events = [
+    { name: "Hackathon 2025", description: "Team up for an exciting hackathon", date: "Sept 10, 2025" },
+    { name: "Study Group - AI/ML", description: "Learn ML basics with peers", date: "Sept 15, 2025" },
+    { name: "E-Sports Tournament", description: "Join 5v5 gaming tournament", date: "Sept 20, 2025" }
+  ];
+
+  res.render('community', { user, events });
 }));
 
-router.post('/community/join', ensureLoggedIn, asyncWrap(async (req, res) => {
-  const { eventId } = req.body;
+// =====================
+// Join Event
+// =====================
+router.post('/join/:eventName', ensureLoggedIn, asyncWrap(async (req, res) => {
+  const eventName = req.params.eventName;
   const user = await User.findById(req.session.user.id);
-  if (!user.joinedEvents.includes(eventId)) {
-    user.joinedEvents.push(eventId);
+
+  if (!user.joinedEvents.includes(eventName)) {
+    user.joinedEvents.push(eventName);
     await user.save();
   }
+
   res.redirect('/dashboard/community');
 }));
 
