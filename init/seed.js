@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://rohithkatika2_db_user:<db_password>@quick-teams.vqz7le3.mongodb.net/?retryWrites=true&w=majority&appName=quick-teams";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://rohithkatika2_db_user:rohith8247203669@quick-teams.vqz7le3.mongodb.net/?retryWrites=true&w=majority&appName=quick-teams";
 
 async function seed() {
   await mongoose.connect(MONGO_URI);
