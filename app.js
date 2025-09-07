@@ -15,7 +15,7 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/quickteams';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://rohithkatika2_db_user:<db_password>@quick-teams.vqz7le3.mongodb.net/?retryWrites=true&w=majority&appName=quick-teams';
 
 // Views
 app.set('view engine', 'ejs');
